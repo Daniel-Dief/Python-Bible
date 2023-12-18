@@ -1,8 +1,40 @@
-import tkinter as tk
+from tkinter import Tk, Canvas
 import tkinter.ttk as ttk
-from utils import randomVerse, getVerse, getBook, getBooks, getChapter, center
+from utils import randomVerse, getVerse, getBook, getBooks, getChapter, center, checkSearch, getAbbrev
 
-def verseWindow(root : object):
+def verseWindow(root : Tk, book : str, chapter : str | int, verse : str | int):
+    """
+    Change the main window to display the selected verse.\n
+
+    {param root} the window to change.\n
+    {param book} the verse book.\n
+    {param chapter} the verse chapter.\n
+    {param number} the verse number.
+    """
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    btn_back = ttk.Button(root, text="Voltar", command=lambda : generateMainButtons(root))
+    btn_back.pack(anchor="nw", padx=5, pady=5)
+
+    verse = getVerse(getAbbrev(book), chapter, verse)
+
+    frm_title = ttk.Frame(root)
+    frm_title.pack(anchor="center")
+
+    lbn_book = ttk.Label(frm_title, text=verse['book'], font=("-size", 30, "-weight", "bold"))
+    lbn_book.pack(padx=5, side="left")
+
+    lbn_chapter = ttk.Label(frm_title, text=f"{verse['chapter']}:", font=("-size", 30, "-weight", "bold"))
+    lbn_chapter.pack(side="left")
+
+    lbn_number = ttk.Label(frm_title, text=verse['number'], font=("-size", 30, "-weight", "bold"))
+    lbn_number.pack(side="left")
+
+    lbn_verse = ttk.Label(root, text=verse['text'], wraplength=500, justify="center", font=("-size", 15))
+    lbn_verse.pack(expand=True)
+
+def searchWindow(root : Tk):
     """
     Change the main window to display a verse.\n
 
@@ -14,29 +46,43 @@ def verseWindow(root : object):
     btn_back = ttk.Button(root, text="Voltar", command=lambda : generateMainButtons(root))
     btn_back.pack(anchor="nw", padx=5, pady=5)
 
-    frm_choices = ttk.Frame(root)
-    frm_choices.pack(expand=True)
+    frm_main = ttk.Frame(root)
+    frm_main.pack(expand=True)
 
-    frm_select = ttk.Frame(frm_choices)
-    frm_select.pack(side="top", expand=True)
+    frm_label = ttk.Frame(frm_main)
+    frm_label.pack(expand=True)
 
-    frm_confirm = ttk.Frame(frm_choices)
-    frm_confirm.pack(side="top", expand=True)
+    lbn_book = ttk.Label(frm_label, width=13, anchor="center", text="Livro", font=("-size", 15))
+    lbn_book.pack(side="left", expand=True, padx=10, pady=5)
 
-    cmb_book = ttk.Combobox(frm_choices)
+    lbn_chapter = ttk.Label(frm_label, width=13, anchor="center", text="Capítulo", font=("-size", 15))
+    lbn_chapter.pack(side="left", expand=True, padx=10, pady=5)
+
+    lbn_verse = ttk.Label(frm_label, width=13, anchor="center", text="Versículo", font=("-size", 15))
+    lbn_verse.pack(side="left", expand=True, padx=10, pady=5)
+
+    frm_combobox = ttk.Frame(frm_main)
+    frm_combobox.pack(expand=True)
+
+    cmb_book = ttk.Combobox(frm_combobox)
     cmb_book.pack(side="left", padx=10)
     
-    cmb_chapter = ttk.Combobox(frm_choices)
+    cmb_chapter = ttk.Combobox(frm_combobox)
     cmb_chapter.pack(side="left", padx=10)
 
-    cmb_verse = ttk.Combobox(frm_choices)
+    cmb_verse = ttk.Combobox(frm_combobox)
     cmb_verse.pack(side="left", padx=10)
+
+    btn_confirm = ttk.Button(frm_main, text="Procurar", command=lambda : verseWindow(root, cmb_book.get(), cmb_chapter.get(), cmb_verse.get()) if cmb_book.get() != "Selecione" and cmb_chapter.get() != "Selecione" and cmb_verse.get() != "Selecione" else "")
+    btn_confirm.pack(expand=True, pady=15)
+
+    checkSearch(cmb_book, cmb_chapter, cmb_verse)
 
     books = getBooks()
 
-    values_books = ["Livro"]
-    values_chapters = ["Capítulo"]
-    values_verses = ["Versiculo"]
+    values_books = ["Selecione"]
+    values_chapters = ["Selecione"]
+    values_verses = ["Selecione"]
 
     for book in books:
         values_books.append(book['name'])
@@ -48,7 +94,7 @@ def verseWindow(root : object):
     cmb_chapter.current(0)
     cmb_verse.current(0)
 
-def chapterWindow(root : object, book : str, chapter : str | int):
+def chapterWindow(root : Tk, book : str, chapter : str | int):
     """
     Change the main window to display the selected chapter.\n
 
@@ -67,7 +113,7 @@ def chapterWindow(root : object, book : str, chapter : str | int):
     main_frame = ttk.Frame(root)
     main_frame.pack(fill="both", expand=True)
 
-    canva_verse = tk.Canvas(main_frame)
+    canva_verse = Canvas(main_frame)
     canva_verse.pack(side="left", fill="both", expand=True)
 
     scroll_verses = ttk.Scrollbar(main_frame, orient="vertical", command=canva_verse.yview)
@@ -84,7 +130,7 @@ def chapterWindow(root : object, book : str, chapter : str | int):
         lbn_number = ttk.Label(frm_verses, text=verse['number']).grid(row=(verse['number']-1), column=0, padx=5)
         lbn_text = ttk.Label(frm_verses, text=verse['text'], width=100, wraplength=700).grid(row=(verse['number']-1), column=1, pady=10)
 
-def listChapterWindow(root : object, book : str):
+def listChapterWindow(root : Tk, book : str):
     """
     Change the main window to display a chapter list of selected book.\n
 
@@ -127,7 +173,7 @@ def listChapterWindow(root : object, book : str):
             else:
                 column_cont += 1
 
-def booksWindow(root : object):
+def booksWindow(root : Tk):
     """
     Change the main window to display the random verse.\n
 
@@ -160,7 +206,7 @@ def booksWindow(root : object):
         else:
             column_cont += 1
 
-def randomWindow(root : object):
+def randomWindow(root : Tk):
     """
     Change the main window to display the random verse.\n
 
@@ -177,19 +223,19 @@ def randomWindow(root : object):
     frm_title = ttk.Frame(root)
     frm_title.pack(anchor="center")
 
-    lbn_book = ttk.Label(frm_title, text=verse['book'], font=("-size", 30, "-weight", "bold"),)
+    lbn_book = ttk.Label(frm_title, text=verse['book'], font=("-size", 30, "-weight", "bold"))
     lbn_book.pack(padx=5, side="left")
 
-    lbn_chapter = ttk.Label(frm_title, text=f"{verse['chapter']}:", font=("-size", 30, "-weight", "bold"),)
+    lbn_chapter = ttk.Label(frm_title, text=f"{verse['chapter']}:", font=("-size", 30, "-weight", "bold"))
     lbn_chapter.pack(side="left")
 
-    lbn_number = ttk.Label(frm_title, text=verse['number'], font=("-size", 30, "-weight", "bold"),)
+    lbn_number = ttk.Label(frm_title, text=verse['number'], font=("-size", 30, "-weight", "bold"))
     lbn_number.pack(side="left")
 
     lbn_verse = ttk.Label(root, text=verse['text'], wraplength=500, justify="center", font=("-size", 15))
     lbn_verse.pack(expand=True)
 
-def generateMainButtons(root : object):
+def generateMainButtons(root : Tk):
     """
     Generate initial buttons.\n
 
@@ -202,7 +248,7 @@ def generateMainButtons(root : object):
     frm_buttons.pack(expand=True)
 
     btn_books = ttk.Button(frm_buttons, width=20, text="Biblia", command=lambda : booksWindow(root))
-    btn_verse = ttk.Button(frm_buttons, width=20, text="Procure um versículo", command=lambda : verseWindow(root))
+    btn_verse = ttk.Button(frm_buttons, width=20, text="Procure um versículo", command=lambda : searchWindow(root))
     btn_random = ttk.Button(frm_buttons, width=20, text="Versículo aleatório", command=lambda : randomWindow(root))
 
     btn_books.pack(padx=5, pady=5)
@@ -213,7 +259,7 @@ def root():
     """
     Create the main window.
     """
-    root = tk.Tk()
+    root = Tk()
     root.title("Python Bible")
     root.geometry("1100x600")
     center(root)
